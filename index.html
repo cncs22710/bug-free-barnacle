@@ -1,50 +1,48 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html lang="en" class="h-full bg-slate-900 text-slate-100 selection:bg-indigo-500 selection:text-white">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CyberPong Online 2D</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PeerJS CDN for WebRTC Peer-to-Peer Networking -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <!-- FontAwesome Icons -->
+    <title>Modern Vertical Pong</title>
+
+    <!-- FontAwesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- PeerJS Peer-to-Peer CDN -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap');
-
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            touch-action: none;
-            overflow: hidden;
+        * {
             user-select: none;
-        }
-
-        .font-orbitron {
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        .neon-glow-cyan {
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2);
-        }
-
-        .neon-glow-rose {
-            box-shadow: 0 0 15px rgba(244, 63, 94, 0.4), inset 0 0 10px rgba(244, 63, 94, 0.2);
-        }
-
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
         canvas {
             display: block;
             width: 100%;
             height: 100%;
+            touch-action: none;
         }
 
-        /* Custom scrollbar for lobby chats/lists */
+        /* Custom scrollbar for mobile modals */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -52,373 +50,317 @@
             background: rgba(15, 23, 42, 0.6);
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(51, 65, 85, 0.8);
-            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
         }
     </style>
 </head>
-<body class="h-full w-full flex flex-col justify-between items-center bg-slate-950 text-slate-100 select-none">
 
-    <!-- Top Navigation Header -->
-    <header class="w-full z-20 px-4 py-3 flex justify-between items-center glass-panel border-b border-slate-800">
-        <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-rose-500 flex items-center justify-center font-orbitron font-bold text-slate-950 text-xl shadow-lg">
-                🏓
+<body class="h-full flex flex-col justify-between overflow-x-hidden bg-slate-950 text-slate-100 font-sans antialiased">
+
+    <!-- Navigation Header -->
+    <header class="w-full max-w-lg mx-auto px-4 py-3 flex items-center justify-between z-30 border-b border-slate-800/60 bg-slate-900/50 backdrop-blur-md">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm">
+                <i class="fa-solid fa-table-tennis-paddle-ball text-sm"></i>
             </div>
             <div>
-                <h1 class="font-orbitron font-extrabold text-lg sm:text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-rose-400">
-                    CYBERPONG <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-500/30 font-sans font-semibold">ONLINE</span>
+                <h1 class="font-bold text-base text-white tracking-tight leading-none">
+                    Vertical Pong
                 </h1>
-                <p id="network-status" class="text-xs text-slate-400 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse" id="status-dot"></span>
-                    <span id="status-text">Disconnected</span>
-                </p>
+                <span class="text-[10px] text-slate-400 font-medium">Modern Arcade</span>
             </div>
         </div>
 
-        <!-- Controls / Modal Action Triggers -->
+        <!-- Header Action Controls -->
         <div class="flex items-center space-x-2">
-            <button id="btn-audio-toggle" title="Toggle Sound" class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 transition">
-                <i class="fa-solid fa-volume-high text-lg" id="icon-audio"></i>
+            <button id="btn-audio-toggle" title="Toggle Sound" class="w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700/60 hover:bg-slate-700/60 text-slate-300 hover:text-white transition flex items-center justify-center active:scale-95">
+                <i class="fa-solid fa-volume-high text-xs" id="icon-audio"></i>
             </button>
-            <button id="btn-customize-modal" title="Customization" class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 transition">
-                <i class="fa-solid fa-palette text-lg"></i>
-            </button>
-            <button id="btn-help-modal" title="How to play" class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 transition">
-                <i class="fa-solid fa-circle-question text-lg"></i>
+            <button id="btn-secret-vault" title="Easter Egg Vault" class="px-3 h-9 rounded-lg bg-indigo-600/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/20 hover:border-indigo-500/50 transition flex items-center gap-1.5 font-semibold text-xs active:scale-95">
+                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                <span>Mods</span>
             </button>
         </div>
     </header>
 
-    <!-- Main Game Container -->
-    <main class="relative w-full flex-1 flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+    <!-- Main Vertical Viewport Container -->
+    <main class="relative w-full max-w-md mx-auto flex-1 flex flex-col items-center justify-center p-2 sm:p-4">
         
-        <!-- Canvas Viewport Wrapper -->
-        <div id="game-wrapper" class="relative w-full max-w-5xl aspect-[16/9] max-h-[82vh] rounded-2xl overflow-hidden glass-panel border border-slate-800 shadow-2xl flex flex-col justify-center items-center">
+        <!-- Canvas Viewport Wrapper (Aspect Ratio 3:4 for portrait format) -->
+        <div id="game-wrapper" class="relative w-full aspect-[3/4] max-h-[80vh] rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl flex items-center justify-center">
             
-            <!-- Game Score Overlay HUD -->
-            <div id="hud-overlay" class="absolute top-4 left-0 right-0 z-10 px-6 sm:px-12 flex justify-between items-center pointer-events-none font-orbitron opacity-90">
-                <!-- Player Left Info -->
-                <div class="flex flex-col items-start">
-                    <span id="hud-p1-name" class="text-xs sm:text-sm font-semibold tracking-widest text-cyan-400 uppercase drop-shadow">PLAYER 1</span>
-                    <span id="hud-p1-score" class="text-4xl sm:text-6xl font-black text-white drop-shadow-[0_0_12px_rgba(6,182,212,0.6)]">0</span>
-                </div>
-                
-                <!-- Center Match Status -->
-                <div class="flex flex-col items-center">
-                    <span id="hud-match-title" class="text-xs tracking-widest text-slate-400 font-semibold uppercase">PRACTICE</span>
-                    <span id="hud-ball-speed" class="text-[10px] text-slate-500 mt-0.5">SPD: 1.0x</span>
-                </div>
+            <canvas id="gameCanvas"></canvas>
 
-                <!-- Player Right Info -->
-                <div class="flex flex-col items-end">
-                    <span id="hud-p2-name" class="text-xs sm:text-sm font-semibold tracking-widest text-rose-400 uppercase drop-shadow">AI BOT</span>
-                    <span id="hud-p2-score" class="text-4xl sm:text-6xl font-black text-white drop-shadow-[0_0_12px_rgba(244,63,94,0.6)]">0</span>
-                </div>
-            </div>
-
-            <!-- Canvas Element -->
-            <canvas id="pong-canvas" class="w-full h-full cursor-crosshair"></canvas>
-
-            <!-- Touch Control Zones (Mobile Overlay) -->
-            <div id="touch-controls" class="absolute inset-0 z-10 pointer-events-none md:hidden flex justify-between opacity-30">
-                <div id="touch-left-zone" class="w-1/2 h-full border-r border-dashed border-cyan-500/20 flex items-center justify-center text-cyan-400/40 text-sm font-orbitron">
-                    <span>DRAG TO MOVE</span>
-                </div>
-                <div id="touch-right-zone" class="w-1/2 h-full flex items-center justify-center text-rose-400/40 text-sm font-orbitron">
-                    <span>DRAG TO MOVE</span>
-                </div>
-            </div>
-
-            <!-- Main Menu / Lobby Overlay -->
+            <!-- Main Menu Overlay -->
             <div id="menu-overlay" class="absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center">
                 
-                <!-- Game Title Hero -->
-                <div class="mb-8">
-                    <h2 class="font-orbitron font-black text-4xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-rose-500 tracking-wider">
-                        CYBER PONG
+                <div class="mb-6">
+                    <h2 class="font-bold text-3xl sm:text-4xl text-white tracking-tight">
+                        Vertical Pong
                     </h2>
-                    <p class="text-slate-400 text-sm sm:text-base mt-2 font-semibold">Real-Time WebRTC P2P Multiplayer & AI Battle</p>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-1 font-medium">You at the bottom • Opponent on top</p>
                 </div>
 
-                <!-- Main Menu Selection Buttons -->
-                <div id="menu-main-actions" class="w-full max-w-xs space-y-3">
-                    <button id="btn-mode-ai" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-orbitron font-bold tracking-wide transition transform hover:-translate-y-0.5 shadow-lg shadow-cyan-950/50 flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-robot text-lg"></i> Single Player (VS AI)
+                <!-- Main Action Buttons -->
+                <div id="menu-main-actions" class="w-full max-w-xs space-y-2.5">
+                    <button id="btn-mode-ai" class="w-full py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm tracking-wide transition shadow-lg shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-2.5">
+                        <i class="fa-solid fa-robot text-base"></i> Single Player (VS AI)
                     </button>
                     
-                    <button id="btn-mode-online" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-orbitron font-bold tracking-wide transition transform hover:-translate-y-0.5 shadow-lg shadow-rose-950/50 flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-globe text-lg"></i> Online Multiplayer
+                    <button id="btn-mode-online" class="w-full py-3 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/80 text-white font-semibold text-sm tracking-wide transition active:scale-95 flex items-center justify-center gap-2.5">
+                        <i class="fa-solid fa-globe text-indigo-400 text-base"></i> Online Multiplayer
                     </button>
                 </div>
 
-                <!-- AI Difficulty Selector Panel -->
-                <div id="menu-ai-options" class="hidden w-full max-w-xs space-y-4">
-                    <h3 class="font-orbitron text-cyan-400 font-semibold text-lg">SELECT AI DIFFICULTY</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button class="btn-ai-diff py-2 px-3 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500 text-slate-300 font-semibold text-sm transition" data-diff="easy">EASY</button>
-                        <button class="btn-ai-diff py-2 px-3 rounded-lg bg-slate-900 border border-cyan-500 bg-cyan-950/30 text-cyan-400 font-semibold text-sm transition" data-diff="medium">MEDIUM</button>
-                        <button class="btn-ai-diff py-2 px-3 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500 text-slate-300 font-semibold text-sm transition" data-diff="hard">HARD</button>
-                        <button class="btn-ai-diff py-2 px-3 rounded-lg bg-slate-900 border border-slate-800 hover:border-rose-500 text-rose-400 font-semibold text-sm transition" data-diff="impossible">INSANE</button>
+                <!-- Online Match Submenu -->
+                <div id="menu-online-actions" class="hidden w-full max-w-xs space-y-2.5">
+                    <button id="btn-host-room" class="w-full py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition shadow-md shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> Create Room (Host)
+                    </button>
+
+                    <div class="flex items-center gap-2 my-2">
+                        <input type="text" id="input-room-id" placeholder="ENTER ROOM CODE" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-center font-mono text-xs focus:outline-none focus:border-indigo-500 tracking-wider">
+                        <button id="btn-join-room" class="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition border border-slate-700 shrink-0">
+                            JOIN
+                        </button>
                     </div>
-                    <div class="flex gap-2 pt-2">
-                        <button id="btn-ai-back" class="w-1/3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 font-semibold text-xs">BACK</button>
-                        <button id="btn-ai-start" class="w-2/3 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-orbitron font-bold text-xs tracking-wide">START MATCH</button>
-                    </div>
+
+                    <button id="btn-back-main" class="text-xs text-slate-400 hover:text-white transition font-medium pt-1">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Back to Menu
+                    </button>
                 </div>
 
-                <!-- Online Lobby Panel -->
-                <div id="menu-online-options" class="hidden w-full max-w-sm space-y-4">
-                    <h3 class="font-orbitron text-rose-400 font-semibold text-lg">ONLINE LOBBY</h3>
-                    
-                    <!-- Host Game Subpanel -->
-                    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-left space-y-2">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Host a Game</span>
-                        <div class="flex gap-2">
-                            <input id="input-host-room-id" type="text" readonly class="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 text-xs font-mono select-all focus:outline-none" placeholder="Generating Room ID...">
-                            <button id="btn-copy-room-id" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1.5">
-                                <i class="fa-regular fa-copy"></i> Copy
-                            </button>
-                        </div>
-                        <p class="text-[11px] text-slate-500">Share your ID or link with a friend to play instantly.</p>
-                    </div>
-
-                    <!-- Join Game Subpanel -->
-                    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-left space-y-2">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Join Existing Game</span>
-                        <div class="flex gap-2">
-                            <input id="input-join-room-id" type="text" class="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:border-rose-500 focus:outline-none" placeholder="Enter Host Room ID">
-                            <button id="btn-join-room" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-orbitron font-bold text-xs transition">
-                                JOIN
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2 pt-2">
-                        <button id="btn-online-back" class="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 font-semibold text-xs">BACK</button>
-                    </div>
-                </div>
-
-                <!-- Waiting for Peer Dialog -->
-                <div id="menu-waiting" class="hidden flex-col items-center justify-center space-y-3">
-                    <div class="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p class="font-orbitron text-slate-300 font-semibold text-sm">WAITING FOR PLAYER 2...</p>
-                    <p class="text-xs text-slate-500">Share your room link or ID to start the match.</p>
-                    <button id="btn-cancel-waiting" class="mt-4 px-4 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400 hover:text-white">Cancel</button>
+                <!-- AI Difficulty Selector -->
+                <div id="ai-difficulty-container" class="mt-6 flex items-center justify-center gap-1.5">
+                    <span class="text-xs text-slate-400 font-medium uppercase tracking-wider mr-1">AI Level:</span>
+                    <button data-diff="easy" class="btn-diff px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 hover:text-white transition">Easy</button>
+                    <button data-diff="medium" class="btn-diff active-diff px-3 py-1 rounded-lg bg-indigo-600 text-white font-semibold text-xs transition">Medium</button>
+                    <button data-diff="hard" class="btn-diff px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 hover:text-white transition">Hard</button>
                 </div>
             </div>
 
-            <!-- Game Over Victory / Defeat Overlay -->
-            <div id="gameover-overlay" class="hidden absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center">
-                <span id="gameover-subtitle" class="font-orbitron text-xs tracking-widest text-slate-400 uppercase">MATCH RESULT</span>
-                <h2 id="gameover-title" class="font-orbitron font-black text-5xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-rose-400 mt-2 mb-2">
-                    VICTORY!
-                </h2>
-                <p id="gameover-score-text" class="text-slate-300 text-lg font-semibold mb-6">Final Score: 11 - 7</p>
-
-                <div class="flex gap-3">
-                    <button id="btn-gameover-rematch" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-orbitron font-bold text-sm transition transform hover:-translate-y-0.5">
-                        PLAY AGAIN
-                    </button>
-                    <button id="btn-gameover-menu" class="px-6 py-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-orbitron font-bold text-sm transition">
-                        MAIN MENU
+            <!-- Waiting for Player Overlay -->
+            <div id="waiting-overlay" class="hidden absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center">
+                <div class="w-10 h-10 rounded-full border-3 border-indigo-500 border-t-transparent animate-spin mb-4"></div>
+                <h3 class="font-bold text-lg text-white mb-1">Waiting for Opponent</h3>
+                <p class="text-xs text-slate-400 mb-4">Share this code with your friend:</p>
+                
+                <div class="flex items-center justify-center gap-2 bg-slate-900 p-2.5 rounded-xl border border-slate-800 max-w-xs w-full mb-4">
+                    <span id="display-room-code" class="font-mono font-bold text-indigo-400 text-base tracking-widest select-all">------</span>
+                    <button id="btn-copy-code" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition">
+                        <i class="fa-solid fa-copy"></i>
                     </button>
                 </div>
+
+                <button id="btn-cancel-waiting" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition">
+                    Cancel
+                </button>
             </div>
 
             <!-- Pause Overlay -->
-            <div id="pause-overlay" class="hidden absolute inset-0 z-20 bg-slate-950/85 backdrop-blur-sm flex flex-col justify-center items-center p-6">
-                <h2 class="font-orbitron font-black text-4xl text-slate-100 tracking-wider mb-6">GAME PAUSED</h2>
-                <div class="flex flex-col gap-3 w-48">
-                    <button id="btn-resume" class="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-orbitron font-bold text-xs tracking-wide">RESUME</button>
-                    <button id="btn-pause-quit" class="w-full py-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-orbitron font-bold text-xs tracking-wide">QUIT MATCH</button>
+            <div id="pause-overlay" class="hidden absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center">
+                <h3 class="font-bold text-2xl text-white mb-6">Paused</h3>
+                <div class="space-y-2.5 w-44">
+                    <button id="btn-resume" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition">
+                        Resume
+                    </button>
+                    <button id="btn-quit" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 font-semibold text-xs transition">
+                        Quit Match
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Over Overlay -->
+            <div id="gameover-overlay" class="hidden absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center">
+                <h2 id="winner-title" class="font-bold text-3xl text-indigo-400 mb-1">VICTORY!</h2>
+                <p id="winner-subtitle" class="text-slate-400 text-xs mb-6">You won the match!</p>
+                <div class="flex items-center gap-3">
+                    <button id="btn-play-again" class="py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition">
+                        Play Again
+                    </button>
+                    <button id="btn-lobby-return" class="py-2.5 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition">
+                        Main Menu
+                    </button>
+                </div>
+            </div>
+
+            <!-- On-Screen Touch Control Hints/Arrows for Mobile -->
+            <div id="mobile-touch-zones" class="absolute inset-0 z-10 pointer-events-none flex justify-between p-3">
+                <div class="w-20 h-full flex items-end pointer-events-auto sm:hidden">
+                    <button id="touch-left" class="w-16 h-16 rounded-xl bg-slate-800/70 border border-slate-700/80 text-white text-xl flex items-center justify-center active:bg-indigo-600">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                </div>
+                <div class="w-20 h-full flex items-end justify-end pointer-events-auto sm:hidden">
+                    <button id="touch-right" class="w-16 h-16 rounded-xl bg-slate-800/70 border border-slate-700/80 text-white text-xl flex items-center justify-center active:bg-indigo-600">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
 
         </div>
+
+        <!-- HUD Helper Bar -->
+        <div class="w-full mt-3 flex items-center justify-between text-xs text-slate-400 font-medium px-2">
+            <div class="flex items-center gap-3">
+                <span><i class="fa-solid fa-keyboard text-indigo-400 mr-1"></i> Move: <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200">A</kbd> / <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200">D</kbd> or <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200">◄</kbd> <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200">►</kbd></span>
+            </div>
+            <div id="ball-count-display" class="font-mono text-indigo-400 font-semibold">
+                Balls: <span id="active-ball-count">1</span>
+            </div>
+        </div>
+
     </main>
 
-    <!-- Bottom Control Quick Tip -->
-    <footer class="w-full py-2 px-4 text-center text-xs text-slate-500 glass-panel border-t border-slate-800/80">
-        <span>Controls: <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">W</kbd>/<kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">S</kbd> or <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">↑</kbd>/<kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">↓</kbd> or Drag Touch Screen | <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">P</kbd> or <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">ESC</kbd> to Pause</span>
-    </footer>
-
-    <!-- Customization Modal -->
-    <div id="modal-customize" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="w-full max-w-md rounded-2xl glass-panel border border-slate-800 p-6 space-y-6">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-orbitron font-bold text-lg text-cyan-400">CUSTOMIZE GEAR</h3>
-                <button id="btn-close-customize" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <!-- EASTER EGG VAULT MODAL -->
+    <div id="modal-secret-vault" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2 text-indigo-400">
+                    <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                    <h3 class="font-bold text-base text-white">Game Modifiers</h3>
+                </div>
+                <button id="btn-close-vault" class="text-slate-400 hover:text-white text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <!-- Color Options -->
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs font-semibold text-slate-400 block mb-2">Player 1 Paddle Color</label>
-                    <div class="flex gap-2" id="picker-p1-color">
-                        <button data-color="#06b6d4" class="w-8 h-8 rounded-full bg-cyan-500 ring-2 ring-white"></button>
-                        <button data-color="#10b981" class="w-8 h-8 rounded-full bg-emerald-500"></button>
-                        <button data-color="#3b82f6" class="w-8 h-8 rounded-full bg-blue-500"></button>
-                        <button data-color="#a855f7" class="w-8 h-8 rounded-full bg-purple-500"></button>
-                        <button data-color="#eab308" class="w-8 h-8 rounded-full bg-yellow-500"></button>
+            <!-- Easter Egg Toggles -->
+            <div class="space-y-3 mb-5">
+                
+                <!-- 1,000 Balls Spawner Easter Egg -->
+                <div class="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h4 class="text-xs font-bold text-indigo-300">⚡ 1,000 Balls Spawner</h4>
+                            <p class="text-[11px] text-slate-400">Unleash chaos with 1,000 physics balls</p>
+                        </div>
+                        <button id="btn-spawn-1k" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition active:scale-95 shrink-0">
+                            Spawn 1K
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-indigo-400/80 pt-1 border-t border-indigo-500/20">
+                        <span>Active Balls: <span id="modal-ball-count" class="font-mono font-bold">1</span></span>
+                        <button id="btn-clear-balls" class="hover:underline text-slate-400">Reset to 1 Ball</button>
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-xs font-semibold text-slate-400 block mb-2">Player 2 / AI Paddle Color</label>
-                    <div class="flex gap-2" id="picker-p2-color">
-                        <button data-color="#f43f5e" class="w-8 h-8 rounded-full bg-rose-500 ring-2 ring-white"></button>
-                        <button data-color="#f97316" class="w-8 h-8 rounded-full bg-orange-500"></button>
-                        <button data-color="#ec4899" class="w-8 h-8 rounded-full bg-pink-500"></button>
-                        <button data-color="#84cc16" class="w-8 h-8 rounded-full bg-lime-500"></button>
-                        <button data-color="#64748b" class="w-8 h-8 rounded-full bg-slate-500"></button>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-slate-700/60">
+                    <div>
+                        <h4 class="text-xs font-semibold text-white">🎈 Giant Ball</h4>
+                        <p class="text-[11px] text-slate-400">Increases ball size by 300%</p>
                     </div>
+                    <input type="checkbox" id="toggle-mod-giant" class="w-4 h-4 accent-indigo-600 rounded cursor-pointer">
                 </div>
 
-                <div>
-                    <label class="text-xs font-semibold text-slate-400 block mb-2">Ball Color</label>
-                    <div class="flex gap-2" id="picker-ball-color">
-                        <button data-color="#ffffff" class="w-8 h-8 rounded-full bg-white ring-2 ring-white"></button>
-                        <button data-color="#38bdf8" class="w-8 h-8 rounded-full bg-sky-400"></button>
-                        <button data-color="#facc15" class="w-8 h-8 rounded-full bg-yellow-400"></button>
-                        <button data-color="#4ade80" class="w-8 h-8 rounded-full bg-green-400"></button>
-                        <button data-color="#f472b6" class="w-8 h-8 rounded-full bg-pink-400"></button>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-slate-700/60">
+                    <div>
+                        <h4 class="text-xs font-semibold text-white">⚡ Super Paddle Speed</h4>
+                        <p class="text-[11px] text-slate-400">Double paddle response speed</p>
                     </div>
+                    <input type="checkbox" id="toggle-mod-speed" class="w-4 h-4 accent-indigo-600 rounded cursor-pointer">
                 </div>
 
-                <div>
-                    <label class="text-xs font-semibold text-slate-400 block mb-2">Target Score (First to Score)</label>
-                    <select id="select-max-score" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none">
-                        <option value="5">5 Points (Quick Match)</option>
-                        <option value="11" selected>11 Points (Standard)</option>
-                        <option value="21">21 Points (Classic)</option>
-                    </select>
+            </div>
+
+            <!-- Secret Code Entry -->
+            <div class="pt-3 border-t border-slate-800">
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">Enter Cheat Code:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="input-secret-code" placeholder="Try '1K', 'BIG', 'FAST'" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-indigo-400 font-mono text-xs focus:outline-none focus:border-indigo-500 uppercase">
+                    <button id="btn-submit-code" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition">
+                        Apply
+                    </button>
                 </div>
             </div>
 
-            <button id="btn-save-customize" class="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-orbitron font-bold text-xs tracking-wide">
-                APPLY & CLOSE
-            </button>
         </div>
     </div>
 
-    <!-- How to Play Modal -->
-    <div id="modal-help" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="w-full max-w-md rounded-2xl glass-panel border border-slate-800 p-6 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-orbitron font-bold text-lg text-cyan-400">HOW TO PLAY</h3>
-                <button id="btn-close-help" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-
-            <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
-                <p><strong class="text-cyan-400">Keyboard:</strong> Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200">W</kbd> or <kbd class="px-1.5 py-0.5 rounded bg-slate-200 text-slate-950">↑</kbd> to move UP, <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200">S</kbd> or <kbd class="px-1.5 py-0.5 rounded bg-slate-200 text-slate-950">↓</kbd> to move DOWN.</p>
-                <p><strong class="text-cyan-400">Touch/Mobile:</strong> Touch and drag anywhere on your paddle's side of the screen to move smoothly.</p>
-                <p><strong class="text-cyan-400">Ball Physics & Spin:</strong> Hitting the ball near the edges of your paddle or moving the paddle while striking adds spin, changing the velocity angle and curve speed.</p>
-                <p><strong class="text-cyan-400">Online Multiplayer:</strong> Create a room and send your direct URL or Room ID to a friend. Uses WebRTC PeerJS to connect browsers directly with low latency!</p>
-            </div>
-
-            <button id="btn-ok-help" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-orbitron font-bold text-xs tracking-wide">
-                GOT IT
-            </button>
-        </div>
+    <!-- Notification Toast -->
+    <div id="toast-message" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 px-4 py-2.5 rounded-xl bg-slate-900 border border-indigo-500/40 text-indigo-300 text-xs font-medium shadow-xl flex items-center gap-2 pointer-events-none">
+        <i class="fa-solid fa-circle-info"></i>
+        <span id="toast-text">Notification message</span>
     </div>
 
-    <!-- Notification Toast Container -->
-    <div id="toast-container" class="fixed bottom-12 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-    <!-- Game Engine & Networking JavaScript -->
     <script>
+        // --- Web Audio API Sound Synthesizer ---
         class SoundEngine {
             constructor() {
                 this.ctx = null;
                 this.enabled = true;
+                this.lastBounceTime = 0;
             }
 
             init() {
                 if (!this.ctx) {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) {
-                        this.ctx = new AudioCtx();
-                    }
-                }
-                if (this.ctx && this.ctx.state === 'suspended') {
-                    this.ctx.resume().catch(() => {});
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
                 }
             }
 
-            playBounce(frequency = 440, duration = 0.08, type = 'sine') {
+            playTone(freq, type = 'sine', duration = 0.08, gainVal = 0.08) {
                 if (!this.enabled) return;
-                this.init();
-                if (!this.ctx) return;
-
                 try {
+                    this.init();
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
 
                     osc.type = type;
-                    osc.frequency.setValueAtTime(frequency, this.ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(Math.max(20, frequency * 0.5), this.ctx.currentTime + duration);
-
-                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
 
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
 
                     osc.start();
                     osc.stop(this.ctx.currentTime + duration);
-                } catch (e) {
-                    console.warn("Audio error:", e);
+                } catch (e) {}
+            }
+
+            playBounce(isPaddle = false) {
+                // Throttle audio triggers when 1000 balls hit simultaneously
+                const now = performance.now();
+                if (now - this.lastBounceTime < 30) return;
+                this.lastBounceTime = now;
+
+                if (isPaddle) {
+                    this.playTone(440, 'sine', 0.08, 0.12);
+                } else {
+                    this.playTone(220, 'triangle', 0.05, 0.08);
                 }
             }
 
-            playScore(isWinner = true) {
-                if (!this.enabled) return;
-                this.init();
-                if (!this.ctx) return;
-
-                try {
-                    const now = this.ctx.currentTime;
-                    const notes = isWinner ? [523.25, 659.25, 783.99] : [300, 250, 200];
-                    
-                    notes.forEach((freq, index) => {
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-
-                        osc.type = isWinner ? 'triangle' : 'sawtooth';
-                        osc.frequency.setValueAtTime(freq, now + index * 0.1);
-
-                        gain.gain.setValueAtTime(0.2, now + index * 0.1);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.1 + 0.2);
-
-                        osc.connect(gain);
-                        gain.connect(this.ctx.destination);
-
-                        osc.start(now + index * 0.1);
-                        osc.stop(now + index * 0.1 + 0.2);
-                    });
-                } catch(e) {}
+            playScore() {
+                this.playTone(523.25, 'sine', 0.1, 0.15);
+                setTimeout(() => this.playTone(659.25, 'sine', 0.15, 0.15), 80);
             }
         }
 
-        class ParticleSystem {
+        // --- Particle System ---
+        class ParticleEngine {
             constructor() {
                 this.particles = [];
             }
 
-            spawn(x, y, color, count = 12) {
+            spawn(x, y, color, count = 8) {
+                if (this.particles.length > 200) return; // Particle limit for performance with many balls
                 for (let i = 0; i < count; i++) {
                     const angle = Math.random() * Math.PI * 2;
-                    const speed = Math.random() * 4 + 1;
+                    const speed = Math.random() * 3 + 1;
                     this.particles.push({
-                        x: x,
-                        y: y,
+                        x, y,
                         vx: Math.cos(angle) * speed,
                         vy: Math.sin(angle) * speed,
-                        size: Math.random() * 3 + 2,
-                        color: color,
+                        color,
+                        radius: Math.random() * 2.5 + 1,
                         alpha: 1,
-                        decay: Math.random() * 0.03 + 0.02
+                        decay: Math.random() * 0.04 + 0.02
                     });
                 }
             }
@@ -436,143 +378,109 @@
             }
 
             draw(ctx) {
-                ctx.save();
-                for (const p of this.particles) {
-                    ctx.globalAlpha = Math.max(0, p.alpha);
+                this.particles.forEach(p => {
+                    ctx.save();
+                    ctx.globalAlpha = p.alpha;
                     ctx.fillStyle = p.color;
                     ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     ctx.fill();
-                }
-                ctx.restore();
+                    ctx.restore();
+                });
             }
         }
 
-        class GameEngine {
+        // --- Vertical Game Engine ---
+        class VerticalPongGame {
             constructor() {
-                this.canvas = document.getElementById('pong-canvas');
+                this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
+                
+                // Vertical Viewport Resolution: Width = 450, Height = 600
+                this.width = 450;
+                this.height = 600;
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+
                 this.sound = new SoundEngine();
-                this.particles = new ParticleSystem();
+                this.particles = new ParticleEngine();
 
-                // Logical internal dimensions
-                this.width = 1280;
-                this.height = 720;
-
-                // Game state variables
+                // State
                 this.mode = 'ai'; // 'ai' or 'online'
                 this.aiDifficulty = 'medium';
-                this.isHost = true;
-                this.isPaused = false;
                 this.isRunning = false;
-                this.maxScore = 11;
-                this.animLoopId = null;
+                this.isPaused = false;
+                this.isHost = true;
 
-                // Palette configuration
-                this.colors = {
-                    p1: '#06b6d4',
-                    p2: '#f43f5e',
-                    ball: '#ffffff'
+                // Vertical Paddle Dimensions (Horizontal orientation at Top and Bottom)
+                this.paddleWidth = 84;
+                this.paddleHeight = 12;
+
+                // Player 1 (YOU - Bottom Paddle)
+                this.p1 = { 
+                    x: (this.width - this.paddleWidth) / 2, 
+                    y: this.height - 28, 
+                    score: 0, 
+                    speed: 7, 
+                    color: '#6366f1' // Indigo
                 };
 
-                // Scores
-                this.score1 = 0;
-                this.score2 = 0;
-
-                // Entity sizes
-                this.paddleWidth = 18;
-                this.paddleHeight = 130;
-
-                this.p1 = {
-                    x: 40,
-                    y: this.height / 2 - 65,
-                    vy: 0,
-                    speed: 10
+                // Player 2 (OPPONENT / AI - Top Paddle)
+                this.p2 = { 
+                    x: (this.width - this.paddleWidth) / 2, 
+                    y: 16, 
+                    score: 0, 
+                    speed: 7, 
+                    color: '#ec4899' // Pink
                 };
 
-                this.p2 = {
-                    x: this.width - 40 - 18,
-                    y: this.height / 2 - 65,
-                    vy: 0,
-                    speed: 10
+                // Array of Balls (Supports 1,000 balls Easter Egg)
+                this.balls = [];
+                this.baseBallRadius = 7;
+
+                // Secret Modifiers
+                this.mods = {
+                    giant: false,
+                    speed: false
                 };
 
-                this.ball = {
-                    x: this.width / 2,
-                    y: this.height / 2,
-                    radius: 10,
-                    vx: 7,
-                    vy: 0,
-                    speed: 8,
-                    baseSpeed: 8,
-                    trail: []
-                };
+                // Controls
+                this.keys = {};
 
-                // Input State
-                this.keys = {
-                    w: false,
-                    s: false,
-                    ArrowUp: false,
-                    ArrowDown: false
-                };
-
-                // PeerJS Network Handle
+                // PeerJS Online State
                 this.peer = null;
                 this.conn = null;
-                this.myPeerId = '';
 
-                this.setupCanvasResize();
-                this.setupEventListeners();
-                
-                // Draw initial idle board background
-                this.draw();
+                this.initEvents();
+                this.resetBalls(1);
+                this.gameLoop();
             }
 
-            setupCanvasResize() {
-                const resize = () => {
-                    const wrapper = document.getElementById('game-wrapper');
-                    if (wrapper) {
-                        const rect = wrapper.getBoundingClientRect();
-                        this.canvas.width = rect.width || 800;
-                        this.canvas.height = rect.height || 450;
-                    }
-                };
-                window.addEventListener('resize', resize);
-                resize();
-            }
-
-            setupEventListeners() {
+            initEvents() {
+                // Keyboard controls (A/D, Left/Right Arrows)
                 window.addEventListener('keydown', (e) => {
-                    if (e.key === 'w' || e.key === 'W') this.keys.w = true;
-                    if (e.key === 's' || e.key === 'S') this.keys.s = true;
-                    if (e.key === 'ArrowUp') this.keys.ArrowUp = true;
-                    if (e.key === 'ArrowDown') this.keys.ArrowDown = true;
-
+                    this.keys[e.key] = true;
                     if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
                         this.togglePause();
                     }
                 });
 
                 window.addEventListener('keyup', (e) => {
-                    if (e.key === 'w' || e.key === 'W') this.keys.w = false;
-                    if (e.key === 's' || e.key === 'S') this.keys.s = false;
-                    if (e.key === 'ArrowUp') this.keys.ArrowUp = false;
-                    if (e.key === 'ArrowDown') this.keys.ArrowDown = false;
+                    this.keys[e.key] = false;
                 });
 
-                // Pointer / Touch Controls
+                // Canvas Touch/Mouse Drag Control for Bottom Paddle
                 const handlePointerMove = (e) => {
                     if (!this.isRunning || this.isPaused) return;
-
                     const rect = this.canvas.getBoundingClientRect();
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    const scaleY = this.height / (rect.height || 1);
-                    const canvasY = (clientY - rect.top) * scaleY;
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const scaleX = this.width / rect.width;
+                    const targetX = (clientX - rect.left) * scaleX - this.paddleWidth / 2;
 
                     if (this.mode === 'ai' || this.isHost) {
-                        this.p1.y = Math.max(10, Math.min(this.height - this.paddleHeight - 10, canvasY - this.paddleHeight / 2));
+                        this.p1.x = Math.max(10, Math.min(this.width - this.paddleWidth - 10, targetX));
                     } else {
-                        this.p2.y = Math.max(10, Math.min(this.height - this.paddleHeight - 10, canvasY - this.paddleHeight / 2));
+                        this.p2.x = Math.max(10, Math.min(this.width - this.paddleWidth - 10, targetX));
                     }
                 };
 
@@ -582,631 +490,468 @@
                     handlePointerMove(e);
                 }, { passive: false });
 
-                // UI Mode Selectors
-                document.getElementById('btn-mode-ai').addEventListener('click', () => {
+                // UI Button Bindings
+                document.getElementById('btn-mode-ai').addEventListener('click', () => this.startMatch('ai'));
+                document.getElementById('btn-mode-online').addEventListener('click', () => {
                     document.getElementById('menu-main-actions').classList.add('hidden');
-                    document.getElementById('menu-ai-options').classList.remove('hidden');
+                    document.getElementById('menu-online-actions').classList.remove('hidden');
                 });
-
-                document.getElementById('btn-ai-back').addEventListener('click', () => {
-                    document.getElementById('menu-ai-options').classList.add('hidden');
+                document.getElementById('btn-back-main').addEventListener('click', () => {
+                    document.getElementById('menu-online-actions').classList.add('hidden');
                     document.getElementById('menu-main-actions').classList.remove('hidden');
                 });
 
-                document.querySelectorAll('.btn-ai-diff').forEach(btn => {
+                // AI Difficulty buttons
+                document.querySelectorAll('.btn-diff').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        document.querySelectorAll('.btn-ai-diff').forEach(b => {
-                            b.classList.remove('border-cyan-500', 'bg-cyan-950/30', 'text-cyan-400');
-                            b.classList.add('border-slate-800', 'text-slate-300');
+                        document.querySelectorAll('.btn-diff').forEach(b => {
+                            b.classList.remove('bg-indigo-600', 'text-white', 'active-diff');
+                            b.classList.add('bg-slate-800', 'text-slate-300');
                         });
-                        e.target.classList.remove('border-slate-800', 'text-slate-300');
-                        e.target.classList.add('border-cyan-500', 'bg-cyan-950/30', 'text-cyan-400');
-                        this.aiDifficulty = e.target.getAttribute('data-diff');
+                        e.target.classList.remove('bg-slate-800', 'text-slate-300');
+                        e.target.classList.add('bg-indigo-600', 'text-white', 'active-diff');
+                        this.aiDifficulty = e.target.dataset.diff;
                     });
                 });
 
-                document.getElementById('btn-ai-start').addEventListener('click', () => {
-                    this.sound.init();
-                    this.mode = 'ai';
-                    this.isHost = true;
-                    this.startMatch();
-                });
-
-                document.getElementById('btn-mode-online').addEventListener('click', () => {
-                    document.getElementById('menu-main-actions').classList.add('hidden');
-                    document.getElementById('menu-online-options').classList.remove('hidden');
-                    this.initPeerJS();
-                });
-
-                document.getElementById('btn-online-back').addEventListener('click', () => {
-                    document.getElementById('menu-online-options').classList.add('hidden');
-                    document.getElementById('menu-main-actions').classList.remove('hidden');
-                });
-
-                document.getElementById('btn-copy-room-id').addEventListener('click', () => {
-                    const roomId = document.getElementById('input-host-room-id').value;
-                    if (!roomId) return;
-                    const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
-                    
-                    const tempInput = document.createElement('input');
-                    tempInput.value = shareUrl;
-                    document.body.appendChild(tempInput);
-                    tempInput.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tempInput);
-
-                    this.showToast("Room Link Copied!");
-                });
-
-                document.getElementById('btn-join-room').addEventListener('click', () => {
-                    const roomId = document.getElementById('input-join-room-id').value.trim();
-                    if (roomId) {
-                        this.joinOnlineRoom(roomId);
-                    } else {
-                        this.showToast("Please enter a valid Host Room ID");
-                    }
-                });
-
-                document.getElementById('btn-cancel-waiting').addEventListener('click', () => {
-                    document.getElementById('menu-waiting').classList.add('hidden');
-                    document.getElementById('menu-online-options').classList.remove('hidden');
-                });
-
-                // Pause & End Game Handlers
-                document.getElementById('btn-resume').addEventListener('click', () => this.togglePause());
-                document.getElementById('btn-pause-quit').addEventListener('click', () => this.quitToMenu());
-                document.getElementById('btn-gameover-menu').addEventListener('click', () => this.quitToMenu());
-                document.getElementById('btn-gameover-rematch').addEventListener('click', () => {
-                    document.getElementById('gameover-overlay').classList.add('hidden');
-                    this.startMatch();
-                });
-
-                // Sound Toggle
+                // Audio Toggle
                 document.getElementById('btn-audio-toggle').addEventListener('click', () => {
                     this.sound.enabled = !this.sound.enabled;
                     const icon = document.getElementById('icon-audio');
-                    icon.className = this.sound.enabled ? "fa-solid fa-volume-high text-lg" : "fa-solid fa-volume-xmark text-lg text-rose-500";
-                    this.showToast(this.sound.enabled ? "Sound Enabled" : "Sound Muted");
+                    icon.className = this.sound.enabled ? 'fa-solid fa-volume-high text-xs' : 'fa-solid fa-volume-xmark text-xs text-rose-400';
+                    this.showToast(this.sound.enabled ? 'Audio Enabled' : 'Audio Muted');
                 });
 
-                // Customization Dialogs
-                document.getElementById('btn-customize-modal').addEventListener('click', () => {
-                    document.getElementById('modal-customize').classList.remove('hidden');
-                });
-                document.getElementById('btn-close-customize').addEventListener('click', () => {
-                    document.getElementById('modal-customize').classList.add('hidden');
-                });
-                document.getElementById('btn-save-customize').addEventListener('click', () => {
-                    this.maxScore = parseInt(document.getElementById('select-max-score').value) || 11;
-                    document.getElementById('modal-customize').classList.add('hidden');
-                    this.showToast("Settings Saved!");
+                // Secret Mod Vault Modal
+                document.getElementById('btn-secret-vault').addEventListener('click', () => this.toggleSecretVault(true));
+                document.getElementById('btn-close-vault').addEventListener('click', () => this.toggleSecretVault(false));
+
+                // 1,000 Balls Spawner Easter Egg Event
+                document.getElementById('btn-spawn-1k').addEventListener('click', () => {
+                    this.spawn1KBalls();
+                    this.showToast("⚡ 1,000 Balls Unleashed!");
                 });
 
-                const setupColorPicker = (containerId, key) => {
-                    const container = document.getElementById(containerId);
-                    if (!container) return;
-                    container.querySelectorAll('button').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            container.querySelectorAll('button').forEach(b => b.classList.remove('ring-2', 'ring-white'));
-                            e.target.classList.add('ring-2', 'ring-white');
-                            this.colors[key] = e.target.getAttribute('data-color');
-                        });
-                    });
-                };
-
-                setupColorPicker('picker-p1-color', 'p1');
-                setupColorPicker('picker-p2-color', 'p2');
-                setupColorPicker('picker-ball-color', 'ball');
-
-                // Help Modals
-                document.getElementById('btn-help-modal').addEventListener('click', () => {
-                    document.getElementById('modal-help').classList.remove('hidden');
-                });
-                document.getElementById('btn-close-help').addEventListener('click', () => {
-                    document.getElementById('modal-help').classList.add('hidden');
-                });
-                document.getElementById('btn-ok-help').addEventListener('click', () => {
-                    document.getElementById('modal-help').classList.add('hidden');
-                });
-            }
-
-            initPeerJS() {
-                if (typeof Peer === 'undefined') {
-                    this.showToast("PeerJS library not loaded. VS AI mode available!");
-                    return;
-                }
-
-                if (this.peer && !this.peer.destroyed) return;
-
-                document.getElementById('status-text').innerText = "Connecting...";
-                document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-amber-500 animate-pulse";
-
-                try {
-                    this.peer = new Peer({
-                        debug: 1,
-                        config: {
-                            iceServers: [
-                                { urls: 'stun:stun.l.google.com:19302' },
-                                { urls: 'stun:stun1.l.google.com:19302' }
-                            ]
-                        }
-                    });
-                } catch (err) {
-                    console.warn("PeerJS init error:", err);
-                    this.handlePeerError("Networking unavailable");
-                    return;
-                }
-
-                this.peer.on('open', (id) => {
-                    this.myPeerId = id;
-                    document.getElementById('input-host-room-id').value = id;
-                    document.getElementById('status-text').innerText = "Online";
-                    document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-emerald-500";
+                document.getElementById('btn-clear-balls').addEventListener('click', () => {
+                    this.resetBalls(1);
+                    this.showToast("Reset to 1 Ball");
                 });
 
-                this.peer.on('connection', (conn) => {
-                    this.conn = conn;
-                    this.isHost = true;
-                    this.mode = 'online';
-                    this.setupPeerDataListeners();
-
-                    this.showToast("Opponent Connected!");
-                    document.getElementById('menu-waiting').classList.add('hidden');
-                    this.startMatch();
+                // Mod Toggles
+                document.getElementById('toggle-mod-giant').addEventListener('change', (e) => {
+                    this.mods.giant = e.target.checked;
+                    this.balls.forEach(b => b.radius = this.mods.giant ? 20 : this.baseBallRadius);
+                });
+                document.getElementById('toggle-mod-speed').addEventListener('change', (e) => {
+                    this.mods.speed = e.target.checked;
+                    this.p1.speed = this.mods.speed ? 14 : 7;
                 });
 
-                this.peer.on('error', (err) => {
-                    console.warn("PeerJS Error:", err);
-                    this.handlePeerError(err);
-                });
-
-                this.peer.on('disconnected', () => {
-                    document.getElementById('status-text').innerText = "Disconnected";
-                    document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-amber-500";
-                });
-            }
-
-            setupPeerDataListeners() {
-                if (!this.conn) return;
-
-                this.conn.on('data', (data) => {
-                    if (!data || typeof data !== 'object') return;
-
-                    if (data.type === 'PADDLE_MOVE') {
-                        if (this.isHost) {
-                            this.p2.y = data.y;
-                        } else {
-                            this.p1.y = data.y;
-                        }
-                    } else if (data.type === 'GAME_STATE' && !this.isHost) {
-                        this.p1.y = data.p1y;
-                        this.p2.y = data.p2y;
-                        this.ball.x = data.bx;
-                        this.ball.y = data.by;
-                        this.score1 = data.s1;
-                        this.score2 = data.s2;
-                        this.updateHUD();
-                    } else if (data.type === 'GAME_OVER') {
-                        this.endGame(data.winner);
-                    } else if (data.type === 'SOUND' && !this.isHost) {
-                        this.sound.playBounce(data.freq, data.dur, data.oscType);
+                // Cheat Codes
+                document.getElementById('btn-submit-code').addEventListener('click', () => {
+                    const val = document.getElementById('input-secret-code').value.trim().toUpperCase();
+                    if (val === '1K' || val === '1000' || val === 'BALLS') {
+                        this.spawn1KBalls();
+                        this.showToast("⚡ 1,000 Balls Cheat Unlocked!");
+                    } else if (val === 'BIG') {
+                        document.getElementById('toggle-mod-giant').click();
+                        this.showToast("🎈 Giant Ball Activated!");
+                    } else if (val === 'FAST') {
+                        document.getElementById('toggle-mod-speed').click();
+                        this.showToast("⚡ Super Speed Activated!");
+                    } else {
+                        this.showToast("Try cheat code '1K', 'BIG', or 'FAST'");
                     }
                 });
 
-                this.conn.on('close', () => {
-                    this.showToast("Opponent disconnected.");
-                    this.quitToMenu();
+                // Pause & Game Over events
+                document.getElementById('btn-resume').addEventListener('click', () => this.togglePause());
+                document.getElementById('btn-quit').addEventListener('click', () => this.resetToMenu());
+                document.getElementById('btn-play-again').addEventListener('click', () => this.startMatch(this.mode));
+                document.getElementById('btn-lobby-return').addEventListener('click', () => this.resetToMenu());
+
+                // PeerJS Online Room Actions
+                document.getElementById('btn-host-room').addEventListener('click', () => this.hostOnlineRoom());
+                document.getElementById('btn-join-room').addEventListener('click', () => {
+                    const code = document.getElementById('input-room-id').value.trim();
+                    if (code) this.joinOnlineRoom(code);
                 });
+                document.getElementById('btn-cancel-waiting').addEventListener('click', () => {
+                    document.getElementById('waiting-overlay').classList.add('hidden');
+                    document.getElementById('menu-overlay').classList.remove('hidden');
+                });
+
+                // Mobile Touch Directional Controls
+                this.setupMobileButtons();
             }
 
-            handlePeerError(err) {
-                document.getElementById('status-text').innerText = "Offline Mode";
-                document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-slate-500";
-                this.showToast("Multiplayer server offline. Enjoy VS AI mode!");
-            }
-
-            joinOnlineRoom(roomId) {
-                this.initPeerJS();
-                document.getElementById('status-text').innerText = "Joining...";
-
-                if (!this.peer) {
-                    this.showToast("Networking client not initialized.");
-                    return;
-                }
-
-                const connectToPeer = () => {
-                    this.conn = this.peer.connect(roomId, { reliable: true });
-                    this.isHost = false;
-                    this.mode = 'online';
-
-                    this.conn.on('open', () => {
-                        document.getElementById('status-text').innerText = "Connected";
-                        document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-emerald-500";
-                        this.showToast("Connected to Host!");
-                        this.setupPeerDataListeners();
-                        this.startMatch();
-                    });
-
-                    this.conn.on('error', (err) => {
-                        this.showToast("Unable to join room ID.");
-                    });
+            setupMobileButtons() {
+                const bindBtn = (id, key) => {
+                    const btn = document.getElementById(id);
+                    if (!btn) return;
+                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); this.keys[key] = true; });
+                    btn.addEventListener('touchend', (e) => { e.preventDefault(); this.keys[key] = false; });
                 };
-
-                if (this.peer.open) {
-                    connectToPeer();
-                } else {
-                    this.peer.once('open', connectToPeer);
-                }
+                bindBtn('touch-left', 'ArrowLeft');
+                bindBtn('touch-right', 'ArrowRight');
             }
 
-            startMatch() {
-                this.score1 = 0;
-                this.score2 = 0;
-                this.p1.y = this.height / 2 - this.paddleHeight / 2;
-                this.p2.y = this.height / 2 - this.paddleHeight / 2;
+            toggleSecretVault(show = true) {
+                const modal = document.getElementById('modal-secret-vault');
+                if (show) modal.classList.remove('hidden');
+                else modal.classList.add('hidden');
+            }
 
-                this.updateHUD();
-                this.resetBall();
+            showToast(msg) {
+                const toast = document.getElementById('toast-message');
+                document.getElementById('toast-text').innerText = msg;
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2500);
+            }
 
-                // Hide menu overlays
+            startMatch(mode) {
+                this.mode = mode;
+                this.p1.score = 0;
+                this.p2.score = 0;
+                this.resetBalls(this.balls.length > 10 ? 1000 : 1);
+
                 document.getElementById('menu-overlay').classList.add('hidden');
+                document.getElementById('waiting-overlay').classList.add('hidden');
                 document.getElementById('gameover-overlay').classList.add('hidden');
                 document.getElementById('pause-overlay').classList.add('hidden');
 
-                if (this.mode === 'online') {
-                    document.getElementById('hud-match-title').innerText = "ONLINE MULTIPLAYER";
-                    document.getElementById('hud-p1-name').innerText = this.isHost ? "YOU (HOST)" : "HOST";
-                    document.getElementById('hud-p2-name').innerText = this.isHost ? "GUEST" : "YOU (GUEST)";
-                } else {
-                    document.getElementById('hud-match-title').innerText = `VS AI (${this.aiDifficulty.toUpperCase()})`;
-                    document.getElementById('hud-p1-name').innerText = "PLAYER 1";
-                    document.getElementById('hud-p2-name').innerText = "AI BOT";
-                }
-
                 this.isRunning = true;
                 this.isPaused = false;
-
-                // Ensure continuous render loop execution
-                if (!this.animLoopId) {
-                    this.loop();
-                }
             }
 
-            resetBall(servingPlayer = 1) {
-                this.ball.x = this.width / 2;
-                this.ball.y = this.height / 2;
-                this.ball.speed = this.ball.baseSpeed;
-                this.ball.trail = [];
+            resetBalls(count = 1) {
+                this.balls = [];
+                for (let i = 0; i < count; i++) {
+                    const radius = this.mods.giant ? 20 : this.baseBallRadius;
+                    const angle = (Math.random() * Math.PI / 3) - Math.PI / 6; // Angle towards top/bottom
+                    const dirY = Math.random() < 0.5 ? 1 : -1;
+                    const speed = Math.random() * 2 + 4.5;
 
-                const angle = (Math.random() * 0.6 - 0.3);
-                const direction = servingPlayer === 1 ? 1 : -1;
+                    this.balls.push({
+                        x: this.width / 2 + (Math.random() * 40 - 20),
+                        y: this.height / 2 + (Math.random() * 40 - 20),
+                        vx: Math.sin(angle) * speed * (Math.random() < 0.5 ? 1 : -1),
+                        vy: Math.cos(angle) * speed * dirY,
+                        radius: radius,
+                        color: count > 1 ? `hsl(${Math.random() * 360}, 85%, 65%)` : '#ffffff'
+                    });
+                }
+                this.updateBallCountUI();
+            }
 
-                this.ball.vx = Math.cos(angle) * this.ball.speed * direction;
-                this.ball.vy = Math.sin(angle) * this.ball.speed;
+            spawn1KBalls() {
+                this.resetBalls(1000);
+            }
+
+            updateBallCountUI() {
+                const countStr = this.balls.length.toLocaleString();
+                document.getElementById('active-ball-count').innerText = countStr;
+                document.getElementById('modal-ball-count').innerText = countStr;
             }
 
             togglePause() {
                 if (!this.isRunning) return;
                 this.isPaused = !this.isPaused;
-                if (this.isPaused) {
-                    document.getElementById('pause-overlay').classList.remove('hidden');
-                } else {
-                    document.getElementById('pause-overlay').classList.add('hidden');
-                }
+                document.getElementById('pause-overlay').classList.toggle('hidden', !this.isPaused);
             }
 
-            quitToMenu() {
+            resetToMenu() {
                 this.isRunning = false;
                 this.isPaused = false;
+                this.resetBalls(1);
                 document.getElementById('menu-overlay').classList.remove('hidden');
-                document.getElementById('menu-main-actions').classList.remove('hidden');
-                document.getElementById('menu-ai-options').classList.add('hidden');
-                document.getElementById('menu-online-options').classList.add('hidden');
                 document.getElementById('pause-overlay').classList.add('hidden');
                 document.getElementById('gameover-overlay').classList.add('hidden');
             }
 
-            updateHUD() {
-                document.getElementById('hud-p1-score').innerText = this.score1;
-                document.getElementById('hud-p2-score').innerText = this.score2;
-                document.getElementById('hud-ball-speed').innerText = `SPD: ${(this.ball.speed / this.ball.baseSpeed).toFixed(1)}x`;
+            // WebRTC PeerJS Online Setup
+            hostOnlineRoom() {
+                this.showToast("Creating room...");
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+                try {
+                    this.peer = new Peer(code, {
+                        config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+                    });
+
+                    this.peer.on('open', (id) => {
+                        document.getElementById('menu-overlay').classList.add('hidden');
+                        document.getElementById('waiting-overlay').classList.remove('hidden');
+                        document.getElementById('display-room-code').innerText = id;
+                    });
+
+                    this.peer.on('connection', (conn) => {
+                        this.conn = conn;
+                        this.isHost = true;
+                        this.setupPeerEvents();
+                        this.startMatch('online');
+                    });
+
+                    this.peer.on('error', () => {
+                        this.showToast("Connection fallback. Starting AI mode.");
+                    });
+                } catch (e) {
+                    this.showToast("WebRTC error. Starting AI mode.");
+                }
+            }
+
+            joinOnlineRoom(code) {
+                this.showToast("Connecting to room " + code + "...");
+                try {
+                    this.peer = new Peer({
+                        config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+                    });
+
+                    this.peer.on('open', () => {
+                        this.conn = this.peer.connect(code);
+                        this.isHost = false;
+                        this.setupPeerEvents();
+                    });
+
+                    this.peer.on('error', () => {
+                        this.showToast("Unable to connect to room.");
+                    });
+                } catch (e) {
+                    this.showToast("WebRTC error.");
+                }
+            }
+
+            setupPeerEvents() {
+                if (!this.conn) return;
+
+                this.conn.on('open', () => {
+                    this.startMatch('online');
+                    this.showToast("Opponent Connected!");
+                });
+
+                this.conn.on('data', (data) => {
+                    if (this.isHost) {
+                        this.p2.x = data.p2X;
+                    } else {
+                        this.p1.x = data.p1X;
+                        this.p2.x = data.p2X;
+                        this.balls = data.balls;
+                        this.p1.score = data.s1;
+                        this.p2.score = data.s2;
+                    }
+                });
+            }
+
+            // AI Movement for Top Paddle
+            updateAI() {
+                if (this.balls.length === 0) return;
+
+                // Track the ball closest to the top paddle moving upward
+                let targetBall = this.balls[0];
+                let minY = this.height;
+
+                for (let i = 0; i < this.balls.length; i++) {
+                    const b = this.balls[i];
+                    if (b.vy < 0 && b.y < minY) {
+                        minY = b.y;
+                        targetBall = b;
+                    }
+                }
+
+                const targetX = targetBall.x - this.paddleWidth / 2;
+                let speed = 4.5;
+                if (this.aiDifficulty === 'easy') speed = 3.2;
+                if (this.aiDifficulty === 'medium') speed = 5.2;
+                if (this.aiDifficulty === 'hard') speed = 7.5;
+
+                if (this.p2.x < targetX) this.p2.x += Math.min(speed, targetX - this.p2.x);
+                else if (this.p2.x > targetX) this.p2.x -= Math.min(speed, this.p2.x - targetX);
+
+                this.p2.x = Math.max(10, Math.min(this.width - this.paddleWidth - 10, this.p2.x));
             }
 
             update() {
                 if (!this.isRunning || this.isPaused) return;
 
-                // Local Paddle Movement
-                const moveSpeed = this.p1.speed;
-                if (this.mode === 'ai' || this.isHost) {
-                    if (this.keys.w || this.keys.ArrowUp) {
-                        this.p1.y = Math.max(10, this.p1.y - moveSpeed);
-                    }
-                    if (this.keys.s || this.keys.ArrowDown) {
-                        this.p1.y = Math.min(this.height - this.paddleHeight - 10, this.p1.y + moveSpeed);
-                    }
-                } else {
-                    if (this.keys.w || this.keys.ArrowUp) {
-                        this.p2.y = Math.max(10, this.p2.y - moveSpeed);
-                    }
-                    if (this.keys.s || this.keys.ArrowDown) {
-                        this.p2.y = Math.min(this.height - this.paddleHeight - 10, this.p2.y + moveSpeed);
-                    }
-
-                    if (this.conn && this.conn.open) {
-                        this.conn.send({ type: 'PADDLE_MOVE', y: this.p2.y });
-                    }
+                // Player 1 Local Controls (Bottom Paddle: A/D or Left/Right Arrow)
+                if (this.keys['a'] || this.keys['A'] || this.keys['ArrowLeft']) {
+                    this.p1.x -= this.p1.speed;
                 }
+                if (this.keys['d'] || this.keys['D'] || this.keys['ArrowRight']) {
+                    this.p1.x += this.p1.speed;
+                }
+                this.p1.x = Math.max(10, Math.min(this.width - this.paddleWidth - 10, this.p1.x));
 
-                // AI Logic
-                if (this.mode === 'ai' && this.isHost) {
+                // Player 2 Controls (AI or Online peer)
+                if (this.mode === 'ai') {
                     this.updateAI();
                 }
 
-                // Ball Mechanics (Host/Local calculation)
-                if (this.isHost) {
-                    this.ball.x += this.ball.vx;
-                    this.ball.y += this.ball.vy;
+                // Ball Physics Loop
+                if (this.mode === 'ai' || this.isHost) {
+                    for (let i = 0; i < this.balls.length; i++) {
+                        const b = this.balls[i];
 
-                    this.ball.trail.push({ x: this.ball.x, y: this.ball.y });
-                    if (this.ball.trail.length > 8) {
-                        this.ball.trail.shift();
+                        b.x += b.vx;
+                        b.y += b.vy;
+
+                        // Wall Bounce (Left / Right boundaries)
+                        if (b.x - b.radius <= 0) {
+                            b.x = b.radius;
+                            b.vx *= -1;
+                            this.sound.playBounce(false);
+                        } else if (b.x + b.radius >= this.width) {
+                            b.x = this.width - b.radius;
+                            b.vx *= -1;
+                            this.sound.playBounce(false);
+                        }
+
+                        // Player 1 Collision (Bottom Paddle)
+                        if (b.y + b.radius >= this.p1.y &&
+                            b.y - b.radius <= this.p1.y + this.paddleHeight &&
+                            b.x + b.radius >= this.p1.x &&
+                            b.x - b.radius <= this.p1.x + this.paddleWidth) {
+                            
+                            b.vy = -Math.abs(b.vy) * 1.02;
+                            const hitOffset = (b.x - (this.p1.x + this.paddleWidth / 2)) / (this.paddleWidth / 2);
+                            b.vx = hitOffset * 5.5;
+                            this.sound.playBounce(true);
+                            this.particles.spawn(b.x, b.y, this.p1.color, 6);
+                        }
+
+                        // Player 2 Collision (Top Paddle)
+                        if (b.y - b.radius <= this.p2.y + this.paddleHeight &&
+                            b.y + b.radius >= this.p2.y &&
+                            b.x + b.radius >= this.p2.x &&
+                            b.x - b.radius <= this.p2.x + this.paddleWidth) {
+                            
+                            b.vy = Math.abs(b.vy) * 1.02;
+                            const hitOffset = (b.x - (this.p2.x + this.paddleWidth / 2)) / (this.paddleWidth / 2);
+                            b.vx = hitOffset * 5.5;
+                            this.sound.playBounce(true);
+                            this.particles.spawn(b.x, b.y, this.p2.color, 6);
+                        }
+
+                        // Bottom Goal (Player 1 misses -> Player 2 scores)
+                        if (b.y - b.radius > this.height) {
+                            if (this.balls.length === 1) {
+                                this.p2.score++;
+                                this.sound.playScore();
+                                this.checkWinner();
+                                this.resetBalls(1);
+                                break;
+                            } else {
+                                // Respawn ball at center in 1,000 mode to keep high intensity
+                                b.x = this.width / 2;
+                                b.y = this.height / 2;
+                                b.vy = -4.5;
+                            }
+                        } 
+                        // Top Goal (Player 2 misses -> Player 1 scores)
+                        else if (b.y + b.radius < 0) {
+                            if (this.balls.length === 1) {
+                                this.p1.score++;
+                                this.sound.playScore();
+                                this.checkWinner();
+                                this.resetBalls(1);
+                                break;
+                            } else {
+                                // Respawn ball at center in 1,000 mode
+                                b.x = this.width / 2;
+                                b.y = this.height / 2;
+                                b.vy = 4.5;
+                            }
+                        }
                     }
 
-                    // Wall Bounce
-                    if (this.ball.y - this.ball.radius <= 10) {
-                        this.ball.y = 10 + this.ball.radius;
-                        this.ball.vy *= -1;
-                        this.sound.playBounce(300, 0.05);
-                        this.broadcastSound(300, 0.05);
-                    } else if (this.ball.y + this.ball.radius >= this.height - 10) {
-                        this.ball.y = this.height - 10 - this.ball.radius;
-                        this.ball.vy *= -1;
-                        this.sound.playBounce(300, 0.05);
-                        this.broadcastSound(300, 0.05);
-                    }
-
-                    // Paddle 1 Hit
-                    if (this.ball.vx < 0 &&
-                        this.ball.x - this.ball.radius <= this.p1.x + this.paddleWidth &&
-                        this.ball.x + this.ball.radius >= this.p1.x &&
-                        this.ball.y >= this.p1.y &&
-                        this.ball.y <= this.p1.y + this.paddleHeight) {
-
-                        const hitOffset = (this.ball.y - (this.p1.y + this.paddleHeight / 2)) / (this.paddleHeight / 2);
-                        const maxAngle = Math.PI / 3;
-                        const bounceAngle = hitOffset * maxAngle;
-
-                        this.ball.speed = Math.min(22, this.ball.speed + 0.5);
-                        this.ball.vx = Math.cos(bounceAngle) * this.ball.speed;
-                        this.ball.vy = Math.sin(bounceAngle) * this.ball.speed;
-
-                        this.particles.spawn(this.ball.x, this.ball.y, this.colors.p1, 14);
-                        this.sound.playBounce(580, 0.08, 'square');
-                        this.broadcastSound(580, 0.08, 'square');
-                        this.updateHUD();
-                    }
-
-                    // Paddle 2 Hit
-                    if (this.ball.vx > 0 &&
-                        this.ball.x + this.ball.radius >= this.p2.x &&
-                        this.ball.x - this.ball.radius <= this.p2.x + this.paddleWidth &&
-                        this.ball.y >= this.p2.y &&
-                        this.ball.y <= this.p2.y + this.paddleHeight) {
-
-                        const hitOffset = (this.ball.y - (this.p2.y + this.paddleHeight / 2)) / (this.paddleHeight / 2);
-                        const maxAngle = Math.PI / 3;
-                        const bounceAngle = hitOffset * maxAngle;
-
-                        this.ball.speed = Math.min(22, this.ball.speed + 0.5);
-                        this.ball.vx = -Math.cos(bounceAngle) * this.ball.speed;
-                        this.ball.vy = Math.sin(bounceAngle) * this.ball.speed;
-
-                        this.particles.spawn(this.ball.x, this.ball.y, this.colors.p2, 14);
-                        this.sound.playBounce(520, 0.08, 'square');
-                        this.broadcastSound(520, 0.08, 'square');
-                        this.updateHUD();
-                    }
-
-                    // Goal Scoring
-                    if (this.ball.x - this.ball.radius < 0) {
-                        this.score2++;
-                        this.particles.spawn(this.ball.x, this.ball.y, '#f43f5e', 25);
-                        this.sound.playScore(false);
-                        this.updateHUD();
-                        this.checkMatchPoint(2);
-                    } else if (this.ball.x + this.ball.radius > this.width) {
-                        this.score1++;
-                        this.particles.spawn(this.ball.x, this.ball.y, '#06b6d4', 25);
-                        this.sound.playScore(true);
-                        this.updateHUD();
-                        this.checkMatchPoint(1);
-                    }
-
-                    // Sync Network State
+                    // Network Sync
                     if (this.mode === 'online' && this.conn && this.conn.open) {
                         this.conn.send({
-                            type: 'GAME_STATE',
-                            p1y: this.p1.y,
-                            p2y: this.p2.y,
-                            bx: this.ball.x,
-                            by: this.ball.y,
-                            s1: this.score1,
-                            s2: this.score2
+                            p1X: this.p1.x,
+                            p2X: this.p2.x,
+                            balls: this.balls,
+                            s1: this.p1.score,
+                            s2: this.p2.score
                         });
                     }
+                } else if (this.conn && this.conn.open) {
+                    this.conn.send({ p2X: this.p2.x });
                 }
 
                 this.particles.update();
             }
 
-            updateAI() {
-                const targetY = this.ball.y - this.paddleHeight / 2;
-                let reactionSpeed = 6;
-
-                switch (this.aiDifficulty) {
-                    case 'easy':
-                        reactionSpeed = 4.2;
-                        if (Math.random() < 0.25) return;
-                        break;
-                    case 'medium':
-                        reactionSpeed = 7.0;
-                        break;
-                    case 'hard':
-                        reactionSpeed = 10.5;
-                        break;
-                    case 'impossible':
-                        reactionSpeed = 16.0;
-                        break;
-                }
-
-                if (this.p2.y < targetY) {
-                    this.p2.y = Math.min(this.height - this.paddleHeight - 10, this.p2.y + reactionSpeed);
-                } else if (this.p2.y > targetY) {
-                    this.p2.y = Math.max(10, this.p2.y - reactionSpeed);
-                }
-            }
-
-            checkMatchPoint(lastScorer) {
-                if (this.score1 >= this.maxScore || this.score2 >= this.maxScore) {
-                    const winner = this.score1 >= this.maxScore ? 1 : 2;
-                    this.endGame(winner);
-                    if (this.mode === 'online' && this.conn && this.conn.open) {
-                        this.conn.send({ type: 'GAME_OVER', winner: winner });
-                    }
-                } else {
-                    this.resetBall(lastScorer === 1 ? 2 : 1);
-                }
-            }
-
-            endGame(winner) {
-                this.isRunning = false;
-                const overlay = document.getElementById('gameover-overlay');
-                const title = document.getElementById('gameover-title');
-                const scoreText = document.getElementById('gameover-score-text');
-
-                const isWinner = (this.isHost && winner === 1) || (!this.isHost && winner === 2);
-
-                title.innerText = isWinner ? "VICTORY!" : "DEFEAT!";
-                title.className = isWinner ? 
-                    "font-orbitron font-black text-5xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 mt-2 mb-2" : 
-                    "font-orbitron font-black text-5xl text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-red-400 mt-2 mb-2";
-
-                scoreText.innerText = `Final Score: ${this.score1} - ${this.score2}`;
-                overlay.classList.remove('hidden');
-            }
-
-            broadcastSound(freq, dur, oscType) {
-                if (this.mode === 'online' && this.conn && this.conn.open) {
-                    this.conn.send({ type: 'SOUND', freq, dur, oscType });
+            checkWinner() {
+                if (this.p1.score >= 10 || this.p2.score >= 10) {
+                    this.isRunning = false;
+                    const isP1Winner = this.p1.score >= 10;
+                    document.getElementById('winner-title').innerText = isP1Winner ? 'VICTORY!' : 'DEFEAT';
+                    document.getElementById('winner-subtitle').innerText = `Final Score: ${this.p1.score} - ${this.p2.score}`;
+                    document.getElementById('gameover-overlay').classList.remove('hidden');
                 }
             }
 
             draw() {
-                const scaleX = this.canvas.width / this.width;
-                const scaleY = this.canvas.height / this.height;
+                this.ctx.clearRect(0, 0, this.width, this.height);
 
-                this.ctx.save();
-                this.ctx.scale(scaleX, scaleY);
-
-                // Background
-                this.ctx.fillStyle = '#020617';
-                this.ctx.fillRect(0, 0, this.width, this.height);
-
-                // Boundary Line
-                this.ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
-                this.ctx.lineWidth = 4;
-                this.ctx.strokeRect(10, 10, this.width - 20, this.height - 20);
-
-                // Center Line
+                // Subtle Court Grid Lines
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                this.ctx.lineWidth = 1;
                 this.ctx.beginPath();
-                this.ctx.setLineDash([12, 12]);
-                this.ctx.moveTo(this.width / 2, 10);
-                this.ctx.lineTo(this.width / 2, this.height - 10);
-                this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
-                this.ctx.lineWidth = 3;
+                this.ctx.moveTo(0, this.height / 2);
+                this.ctx.lineTo(this.width, this.height / 2);
                 this.ctx.stroke();
-                this.ctx.setLineDash([]);
 
-                // Draw Particles
-                this.particles.draw(this.ctx);
+                // Center Circle Boundary
+                this.ctx.beginPath();
+                this.ctx.arc(this.width / 2, this.height / 2, 45, 0, Math.PI * 2);
+                this.ctx.stroke();
 
-                // Draw Ball Trail
-                for (let i = 0; i < this.ball.trail.length; i++) {
-                    const pt = this.ball.trail[i];
-                    const alpha = (i + 1) / this.ball.trail.length * 0.4;
-                    const size = this.ball.radius * ((i + 1) / this.ball.trail.length);
+                // Score Display (Player 2 Top / Player 1 Bottom)
+                this.ctx.font = '700 42px Inter, sans-serif';
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(this.p2.score, this.width / 2, this.height / 2 - 70);
+                this.ctx.fillText(this.p1.score, this.width / 2, this.height / 2 + 70);
 
-                    this.ctx.fillStyle = this.colors.ball;
-                    this.ctx.globalAlpha = alpha;
+                // Top Paddle (Opponent / AI - Pink)
+                this.ctx.fillStyle = this.p2.color;
+                this.ctx.beginPath();
+                this.ctx.roundRect(this.p2.x, this.p2.y, this.paddleWidth, this.paddleHeight, 6);
+                this.ctx.fill();
+
+                // Bottom Paddle (You - Indigo)
+                this.ctx.fillStyle = this.p1.color;
+                this.ctx.beginPath();
+                this.ctx.roundRect(this.p1.x, this.p1.y, this.paddleWidth, this.paddleHeight, 6);
+                this.ctx.fill();
+
+                // Render All Active Balls
+                for (let i = 0; i < this.balls.length; i++) {
+                    const b = this.balls[i];
+                    this.ctx.fillStyle = b.color;
                     this.ctx.beginPath();
-                    this.ctx.arc(pt.x, pt.y, size, 0, Math.PI * 2);
+                    this.ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
                     this.ctx.fill();
                 }
-                this.ctx.globalAlpha = 1.0;
 
-                // Draw Ball
-                this.ctx.shadowBlur = 15;
-                this.ctx.shadowColor = this.colors.ball;
-                this.ctx.fillStyle = this.colors.ball;
-                this.ctx.beginPath();
-                this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
-                this.ctx.fill();
-
-                // Draw Paddles
-                this.ctx.shadowBlur = 15;
-                this.ctx.shadowColor = this.colors.p1;
-                this.ctx.fillStyle = this.colors.p1;
-                this.drawRoundedRect(this.p1.x, this.p1.y, this.paddleWidth, this.paddleHeight, 8);
-
-                this.ctx.shadowBlur = 15;
-                this.ctx.shadowColor = this.colors.p2;
-                this.ctx.fillStyle = this.colors.p2;
-                this.drawRoundedRect(this.p2.x, this.p2.y, this.paddleWidth, this.paddleHeight, 8);
-
-                this.ctx.restore();
+                // Render Impact Particles
+                this.particles.draw(this.ctx);
             }
 
-            drawRoundedRect(x, y, w, h, r) {
-                this.ctx.beginPath();
-                this.ctx.moveTo(x + r, y);
-                this.ctx.arcTo(x + w, y, x + w, y + h, r);
-                this.ctx.arcTo(x + w, y + h, x, y + h, r);
-                this.ctx.arcTo(x, y + h, x, y, r);
-                this.ctx.arcTo(x, y, x + w, y, r);
-                this.ctx.closePath();
-                this.ctx.fill();
-            }
-
-            showToast(message) {
-                const container = document.getElementById('toast-container');
-                if (!container) return;
-                const toast = document.createElement('div');
-                toast.className = "px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-slate-200 text-xs font-semibold shadow-xl backdrop-blur-md transition transform translate-y-2 opacity-0";
-                toast.innerText = message;
-                container.appendChild(toast);
-
-                setTimeout(() => {
-                    toast.classList.remove('translate-y-2', 'opacity-0');
-                }, 20);
-
-                setTimeout(() => {
-                    toast.classList.add('opacity-0');
-                    setTimeout(() => {
-                        if (container.contains(toast)) container.removeChild(toast);
-                    }, 300);
-                }, 3000);
-            }
-
-            loop() {
+            gameLoop() {
                 this.update();
                 this.draw();
-                this.animLoopId = requestAnimationFrame(() => this.loop());
+                requestAnimationFrame(() => this.gameLoop());
             }
         }
 
-        window.onload = () => {
-            window.game = new GameEngine();
-        };
+        // Initialize App on Window Load
+        window.addEventListener('load', () => {
+            window.gameInstance = new VerticalPongGame();
+        });
     </script>
+
 </body>
 </html>
